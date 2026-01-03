@@ -1,0 +1,83 @@
+# Compiled class files
+*.class
+
+# Log file
+*.log
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/tmp/
+
+# IDE files
+## Eclipse
+.classpath
+.project
+.settings/
+bin/
+*.tmp
+
+## IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+## NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build output
+build/
+
+# Unit test reports
+TEST*.xml
+
+# Checkstyle reports
+checkstyle-*.xml
+
+# Surefire reports
+surefire-reports/
+surefire-*.txt
+failsafe-reports/
+failsafe-*.txt
+
+# Code coverage tools (Jacoco, Cobertura, etc.)
+*.exec
+*.ser
+*.ec
+/jacoco.exec
+/jacoco-it.exec
+*.jacoco
+.coverage
+.coverage.*
+coverage/
+

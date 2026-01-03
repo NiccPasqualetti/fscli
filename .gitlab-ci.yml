@@ -1,0 +1,83 @@
+variables:
+  # `showDateTime` will show the passed time in milliseconds. You need to specify `--batch-mode` to make this work.
+  MAVEN_OPTS: >-
+    -Dhttps.protocols=TLSv1.2
+    -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+    -Dorg.slf4j.simpleLogger.showDateTime=true
+    -Djava.awt.headless=true
+    -Dheadless=true
+    -Dsw-renderer=true
+
+  # As of Maven 3.3.0 instead of this you MAY define these options in `.mvn/maven.config` so the same config is used
+  # when running from the command line.
+  # As of Maven 3.6.1, the use of `--no-tranfer-progress` (or `-ntp`) suppresses download and upload messages. The use
+  # of the `Slf4jMavenTransferListener` is no longer necessary.
+  # `installAtEnd` and `deployAtEnd` are only effective with recent version of the corresponding plugins.
+  MAVEN_CLI_OPTS: >-
+    --batch-mode
+    --errors
+    --fail-at-end
+    --show-version
+    --no-transfer-progress
+    --no-snapshot-updates
+  #   -DinstallAtEnd=true
+  #   -DdeployAtEnd=true
+
+stages:
+  - backend
+  - frontend
+
+# Run pipeline only on dev or main
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_REF_NAME == "dev" || $CI_COMMIT_REF_NAME == "main")'
+      when: always
+    - when: never
+
+# Cache downloaded dependencies and plugins between builds.
+# To keep cache across branches add 'key: "$CI_JOB_NAME"'
+# Be aware that `mvn deploy` will install the built jar into this repository. If you notice your cache size
+# increasing, consider adding `-Dmaven.install.skip=true` to `MAVEN_OPTS` or in `.mvn/maven.config`
+cache:
+  key: "maven-$CI_COMMIT_REF_SLUG"
+  paths:
+    - .m2/repository/
+
+backend:
+  stage: backend
+  image: gitlab-edu.supsi.ch:5050/dti-isin/labingsw/common:maven3java17
+  before_script:
+    - cd backend
+  script:
+    - 'mvn $MAVEN_OPTS $MAVEN_CLI_OPTS clean install'
+  after_script:
+    - cd ..
+  artifacts:
+    paths:
+      - backend/target/fscli-backend.jar
+      - backend/target/site/jacoco/*
+    expire_in: 1 hour
+
+frontend:
+  stage: frontend
+  dependencies:
+    - backend
+  image: gitlab-edu.supsi.ch:5050/dti-isin/labingsw/common:maven3java17
+  # ensure we explicitly need the backend job and download its artifacts
+  needs:
+    - job: backend
+      artifacts: true
+  before_script:
+    - 'cd frontend'
+    - 'Xvfb :99 -screen 0 1920x1080x16 &'
+  script:
+    - 'DISPLAY=:99 mvn $MAVEN_OPTS $MAVEN_CLI_OPTS -Dheadless clean package'
+    - 'mvn $MAVEN_CLI_OPTS jacoco:report'
+  after_script:
+    - cd ..
+  artifacts:
+    paths:
+      - backend/target/site/jacoco/*
+      - frontend/target/site/jacoco/*
+      - frontend/target/fscli-jar-with-dependencies.jar
+    expire_in: 1 hour
